@@ -75,11 +75,24 @@ function init()
   getchar()
 end
 
+function ident()
+  name = getname()
+  if look == '(' then
+    match('(')
+    match(')')
+    emitln('BSR ' .. name)
+  else
+    emitln('MOVE ' .. name .. '(PC),D0')
+  end
+end
+
 function factor()
   if look == '(' then
     match('(')
     expression()
     match(')')
+  elseif isalpha(look) then
+    ident()
   else
     emitln('MOVE #' .. getnum() .. ',D0')
   end
@@ -91,7 +104,6 @@ function term()
     emitln('MOVE D0,-(SP)')
     if look == '*' then multiply()
     elseif look == '/' then divide()
-    else expected('mulop')
     end
   end
 end
@@ -132,10 +144,18 @@ function expression()
     emitln('MOVE D0,-(SP)')
     if look == '+' then add()
     elseif look == '-' then subtract()
-    else expected('addop')
     end
   end
 end
 
+function assignment()
+  name = getname()
+  match('=')
+  expression()
+  emitln('LEA ' .. name .. '(PC),A0')
+  emitln('MOVE D0,(A0)')
+end
+
 init()
-expression()
+assignment()
+if look ~= '\n' then expected('newline') end
