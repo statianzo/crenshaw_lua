@@ -1,7 +1,7 @@
 local look
 
 function err(message)
-  print('Error:' .. message .. '\n')
+  print('Error: ' .. message)
 end
 
 function fail(message)
@@ -64,7 +64,7 @@ function getnum()
 end
 
 function emit(s)
-  print(string.format("\t%s", s))
+  io.stdout:write(string.format("\t%s", s))
 end
 
 function emitln(s)
@@ -75,4 +75,67 @@ function init()
   getchar()
 end
 
+function factor()
+  if look == '(' then
+    match('(')
+    expression()
+    match(')')
+  else
+    emitln('MOVE #' .. getnum() .. ',D0')
+  end
+end
+
+function term()
+  factor()
+  while look == '*' or look == '/' do
+    emitln('MOVE D0,-(SP)')
+    if look == '*' then multiply()
+    elseif look == '/' then divide()
+    else expected('mulop')
+    end
+  end
+end
+
+function add()
+  match('+')
+  term()
+  emitln('ADD (SP)+,D0')
+end
+
+function subtract()
+  match('-')
+  term()
+  emitln('SUB (SP)+,D0')
+  emitln('NEG D0')
+end
+
+function multiply()
+  match('*')
+  factor()
+  emitln('MULS (SP)+,D0')
+end
+
+function divide()
+  match('/')
+  factor()
+  emitln('MOVE (SP)+,D1')
+  emitln('DIVS D1,D0')
+end
+
+function expression()
+  if isaddop(look) then
+    emitln('CLR D0')
+  else
+    term()
+  end
+  while look == '+' or look == '-' do
+    emitln('MOVE D0,-(SP)')
+    if look == '+' then add()
+    elseif look == '-' then subtract()
+    else expected('addop')
+    end
+  end
+end
+
 init()
+expression()
