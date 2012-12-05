@@ -18,8 +18,10 @@ function getchar()
 end
 
 function match(x)
-  if look == x then getchar()
-  else expected('"' .. x .. '"')
+  if look ~= x then expected('"' .. x .. '"')
+  else
+    getchar()
+    skipwhite()
   end
 end
 
@@ -32,7 +34,7 @@ function isdigit(c)
 end
 
 function iswhite(c)
-  return string.match(c, '%s')
+  return c == ' ' or c == '\t'
 end
 
 function skipwhite()
@@ -51,6 +53,7 @@ function getname()
   end
   name = string.upper(look)
   getchar()
+  skipwhite()
   return name
 end
 
@@ -60,6 +63,7 @@ function getnum()
   end
   prev = look
   getchar()
+  skipwhite()
   return prev
 end
 
@@ -73,6 +77,7 @@ end
 
 function init()
   getchar()
+  skipwhite()
 end
 
 function ident()
